@@ -4,15 +4,14 @@ namespace CS210_Assignment1_Oleh_Hanhal;
 
 public class Calculator
 {
-    private CustomArrayList _tokens = new CustomArrayList();
-    
-    public void Tokenize(string input)
+    public CustomArrayList Tokenize(string input)
     {
+        CustomArrayList tokens = new CustomArrayList();
         string buffer = "";
 
         foreach (var s in input)
         {
-            if (char.IsDigit(s))
+            if (char.IsDigit(s) || s == '.' || s == ',')
             {
                 buffer += s.ToString();
             }
@@ -21,17 +20,17 @@ public class Calculator
             {
                 if (buffer != "")
                 {
-                    _tokens.Add(buffer);
+                    tokens.Add(buffer);
                     buffer = "";
                 }
-                _tokens.Add(s.ToString());
+                tokens.Add(s.ToString());
             }
             
             else if (s == ' ')
             {
                 if (buffer != "")
                 {
-                    _tokens.Add(buffer);
+                    tokens.Add(buffer);
                     buffer = "";
                 }
             }
@@ -39,11 +38,13 @@ public class Calculator
         
         if (buffer != "")
         {
-            _tokens.Add(buffer);
+            tokens.Add(buffer);
         }
+
+        return tokens;
     }    
     
-    public string TurnToRPN()
+    public CustomArrayList TurnToRPN(CustomArrayList tokens)
     {
         Dictionary<string, int> priorities = new Dictionary<string, int>
         {
@@ -55,14 +56,14 @@ public class Calculator
         };
 
         CustomStack operatorStack = new CustomStack();
-        string result = "";
+        CustomArrayList result = new CustomArrayList();
 
-        for (var i = 0; i < _tokens.Count(); i++)
+        for (var i = 0; i < tokens.Count(); i++)
         {
-            string token = _tokens.GetAt(i);
-            if (int.TryParse(token, out int parsed_number))
+            string token = tokens.GetAt(i);
+            if (double.TryParse(token, out double token_parsed ))
             {
-                result += token + " ";
+                result.Add(token);
             }
 
             else if (token == "+" || token == "-" || token == "*" || token == "/")
@@ -71,7 +72,7 @@ public class Calculator
                        operatorStack.Peek() != "(" &&
                        priorities[token] <= priorities[operatorStack.Peek()])
                 {
-                    result += operatorStack.Pop() + " ";
+                    result.Add(operatorStack.Pop());
                 }
 
                 operatorStack.Push(token);
@@ -87,7 +88,7 @@ public class Calculator
                 while (operatorStack.Peek() != null &&
                        operatorStack.Peek() != "(")
                 {
-                        result += operatorStack.Pop() + " ";
+                        result.Add(operatorStack.Pop());
                 }
 
                 operatorStack.Pop();
@@ -96,9 +97,62 @@ public class Calculator
 
         while (operatorStack.Peek() != null)
         {
-            result += operatorStack.Pop() + " ";
+            result.Add(operatorStack.Pop());
         }
 
-        return result.Trim();
+        return result;
     }
+
+    public double Calculate(CustomArrayList RPN)
+    {
+        CustomStack s = new CustomStack();
+
+        for (var i = 0; i < RPN.Count(); i++)
+        {
+            var token = RPN.GetAt(i);
+
+            if (double.TryParse(token, out double number))
+                s.Push(token);
+            
+            else if (token == "+")
+            {
+                double num1 = double.Parse(s.Pop());
+                double num2 = double.Parse(s.Pop());
+                double num3 = num2 + num1;
+                
+                s.Push(num3.ToString());
+            }
+            
+            else if (token == "-")
+            {
+                double num1 = double.Parse(s.Pop());
+                double num2 = double.Parse(s.Pop());
+                double num3 = num2 - num1;
+                
+                s.Push(num3.ToString());
+            }
+            
+            else if (token == "*")
+            {
+                double num1 = double.Parse(s.Pop());
+                double num2 = double.Parse(s.Pop());
+                double num3 = num2 * num1;
+                
+                s.Push(num3.ToString());
+            }
+            
+            else if (token == "/")
+            {
+                double num1 = double.Parse(s.Pop());
+                double num2 = double.Parse(s.Pop());
+                double num3 = num2 / num1;
+                
+                s.Push(num3.ToString());
+            }
+        }
+
+        return double.Parse(s.Pop());
+    }
+
+    public double Compute(string input) => Calculate(TurnToRPN(Tokenize(input)));
 }

@@ -39,12 +39,6 @@ public class CustomStack
             
             return value;
         }
-        
-        else
-        {
-            Console.WriteLine("Stack is empty");
-        }
-
         return null;
     }
 }
