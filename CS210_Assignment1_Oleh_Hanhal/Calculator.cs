@@ -16,7 +16,7 @@ public class Calculator
                 buffer += s.ToString();
             }
             
-            else if (s == '+' || s == '-' || s == '*' || s == '/' || s == '(' || s == ')')
+            else if (s == '+' || s == '-' || s == '*' || s == '/' || s == '(' || s == ')' || s == '^')
             {
                 if (buffer != "")
                 {
@@ -52,7 +52,8 @@ public class Calculator
             { "+", 1 },
             { "-", 1 },
             { "*", 2 },
-            { "/", 2 }
+            { "/", 2 },
+            { "^", 3 }
         };
 
         CustomStack operatorStack = new CustomStack();
@@ -66,15 +67,20 @@ public class Calculator
                 result.Add(token);
             }
 
-            else if (token == "+" || token == "-" || token == "*" || token == "/")
+            else if (token == "+" || token == "-" || token == "*" || token == "/" || token == "^")
             {
-                while (operatorStack.Peek() != null &&
-                       operatorStack.Peek() != "(" &&
-                       priorities[token] <= priorities[operatorStack.Peek()])
+                while (
+                    operatorStack.Peek() != null &&
+                    operatorStack.Peek() != "(" &&
+                    (
+                        priorities[token] < priorities[operatorStack.Peek()] ||
+                        (priorities[token] == priorities[operatorStack.Peek()] && token != "^")
+                    )
+                ) 
                 {
                     result.Add(operatorStack.Pop());
                 }
-
+    
                 operatorStack.Push(token);
             }
 
@@ -146,6 +152,15 @@ public class Calculator
                 double num1 = double.Parse(s.Pop());
                 double num2 = double.Parse(s.Pop());
                 double num3 = num2 / num1;
+                
+                s.Push(num3.ToString());
+            }
+            
+            else if (token == "^")
+            {
+                double num1 = double.Parse(s.Pop());
+                double num2 = double.Parse(s.Pop());
+                double num3 = Math.Pow(num2, num1);
                 
                 s.Push(num3.ToString());
             }
