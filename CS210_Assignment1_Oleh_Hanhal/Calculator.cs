@@ -4,58 +4,145 @@ namespace CS210_Assignment1_Oleh_Hanhal;
 
 public class Calculator
 {
-    public CustomArrayList Tokenize(string input)
+    private CustomDict _variables = new CustomDict();
+    
+    private int GetPriority(string oper)
     {
+        switch (oper)
+        {
+            case "(":
+                return 0;   
+            
+            case "+":
+            case "-":
+                return 1;
+            
+            case "*":
+            case "/":
+                return 2;
+            
+            case "^":
+            case "sin":
+            case "cos":
+                return 3;
+            
+            default:
+                return -1;
+        }
+    }
+    
+    public CustomArrayList Tokenize(string input)
+    {   
         CustomArrayList tokens = new CustomArrayList();
         string buffer = "";
+        string var_buffer = "";
 
-        foreach (var s in input)
+        if (!input.Contains('='))
         {
-            if (char.IsDigit(s) || s == '.' || s == ',')
+            for (int i = 0; i < input.Length; i++)
             {
-                buffer += s.ToString();
-            }
-            
-            else if (s == '+' || s == '-' || s == '*' || s == '/' || s == '(' || s == ')' || s == '^')
-            {
-                if (buffer != "")
+                var s = input[i];
+                if (char.IsDigit(s) || s == '.' || s == ',')
                 {
-                    tokens.Add(buffer);
-                    buffer = "";
+                    buffer += s.ToString();
                 }
-                tokens.Add(s.ToString());
-            }
             
-            else if (s == ' ')
-            {
-                if (buffer != "")
+                else if (s == '+' || s == '-' || s == '*' || s == '/' || s == '(' || s == ')' || s == '^')
                 {
-                    tokens.Add(buffer);
-                    buffer = "";
+                    if (buffer != "")
+                    {
+                        tokens.Add(buffer);
+                        buffer = "";
+                    }
+                    
+                    if (var_buffer != "")
+                    {
+                        if (_variables.ContainsKey(var_buffer.ToString()))
+                        {
+                            var var_tokenized = Tokenize(_variables.GetValue(var_buffer.ToString()));
+                            for (int p = 0; p < var_tokenized.Count(); p++)
+                                tokens.Add(var_tokenized.GetAt(p));
+                        }
+                        var_buffer = "";
+                    }
+                    
+                    tokens.Add(s.ToString());
+                }
+            
+                else if (s == ' ')
+                {
+                    if (buffer != "")
+                    {
+                        tokens.Add(buffer);
+                        buffer = "";
+                    }
+                    
+                    if (var_buffer != "")
+                    {
+                        if (_variables.ContainsKey(var_buffer.ToString()))
+                        {
+                            var var_tokenized = Tokenize(_variables.GetValue(var_buffer.ToString()));
+                        
+                            for (int p = 0; p < var_tokenized.Count(); p++)
+                            {
+                                tokens.Add(var_tokenized.GetAt(p));
+                            }
+                        }
+
+                        var_buffer = "";
+                    }
+                }
+            
+                else if (s == 's' && (i+1) < input.Length)
+                {
+                    if (input[i+1] == 'i' && input[i+2] == 'n')
+                        tokens.Add("sin");
+                    i += 2;
+                }
+            
+                else if (s == 'c' && (i+1) < input.Length)
+                {
+                    if (input[i+1] == 'o' && input[i+2] == 's')
+                        tokens.Add("cos");
+                    i += 2;
+                }
+
+                else
+                {
+                    var_buffer += s.ToString();
                 }
             }
+        }
+        
+        else
+        {
+            var variable_name = "";
+            var equal_index = input.IndexOf('=');
+            _variables.AddItem((input[..equal_index].Replace(" ", ""),
+                                input[(equal_index + 1)..]));
         }
         
         if (buffer != "")
         {
             tokens.Add(buffer);
         }
-
+        
+        if (var_buffer != "")
+        {
+            if (_variables.ContainsKey(var_buffer.ToString()))
+            {
+                var var_tokenized = Tokenize(_variables.GetValue(var_buffer.ToString()));
+                for (int p = 0; p < var_tokenized.Count(); p++)
+                    tokens.Add(var_tokenized.GetAt(p));
+            }
+            var_buffer = "";
+        }
+        
         return tokens;
-    }    
+    }
     
     public CustomArrayList TurnToRPN(CustomArrayList tokens)
     {
-        Dictionary<string, int> priorities = new Dictionary<string, int>
-        {
-            { "(", 0 },
-            { "+", 1 },
-            { "-", 1 },
-            { "*", 2 },
-            { "/", 2 },
-            { "^", 3 }
-        };
-
         CustomStack operatorStack = new CustomStack();
         CustomArrayList result = new CustomArrayList();
 
@@ -67,20 +154,28 @@ public class Calculator
                 result.Add(token);
             }
 
-            else if (token == "+" || token == "-" || token == "*" || token == "/" || token == "^")
+            else if (
+                token == "+" ||
+                token == "-" ||
+                token == "*" ||
+                token == "/" ||
+                token == "^" ||
+                token == "sin" ||
+                token == "cos"
+                )
             {
                 while (
                     operatorStack.Peek() != null &&
                     operatorStack.Peek() != "(" &&
                     (
-                        priorities[token] < priorities[operatorStack.Peek()] ||
-                        (priorities[token] == priorities[operatorStack.Peek()] && token != "^")
+                        GetPriority(token) < GetPriority(operatorStack.Peek()) ||
+                        (GetPriority(token) == GetPriority(operatorStack.Peek()) && token != "^")
                     )
-                ) 
+                )
                 {
                     result.Add(operatorStack.Pop());
                 }
-    
+                
                 operatorStack.Push(token);
             }
 
@@ -124,50 +219,83 @@ public class Calculator
             {
                 double num1 = double.Parse(s.Pop());
                 double num2 = double.Parse(s.Pop());
-                double num3 = num2 + num1;
+                double result = num2 + num1;
                 
-                s.Push(num3.ToString());
+                s.Push(result.ToString());
             }
             
             else if (token == "-")
             {
                 double num1 = double.Parse(s.Pop());
                 double num2 = double.Parse(s.Pop());
-                double num3 = num2 - num1;
+                double result = num2 - num1;
                 
-                s.Push(num3.ToString());
+                s.Push(result.ToString());
             }
             
             else if (token == "*")
             {
                 double num1 = double.Parse(s.Pop());
                 double num2 = double.Parse(s.Pop());
-                double num3 = num2 * num1;
+                double result = num2 * num1;
                 
-                s.Push(num3.ToString());
+                s.Push(result.ToString());
             }
             
             else if (token == "/")
             {
                 double num1 = double.Parse(s.Pop());
                 double num2 = double.Parse(s.Pop());
-                double num3 = num2 / num1;
+                double result = num2 / num1;
                 
-                s.Push(num3.ToString());
+                s.Push(result.ToString());
             }
             
             else if (token == "^")
             {
                 double num1 = double.Parse(s.Pop());
                 double num2 = double.Parse(s.Pop());
-                double num3 = Math.Pow(num2, num1);
+                double result = Math.Pow(num2, num1);
                 
-                s.Push(num3.ToString());
+                s.Push(result.ToString());
+            }
+            
+            else if (token == "sin")
+            {
+                double num = double.Parse(s.Pop());
+                var result = Math.Sin(num); 
+                s.Push(result.ToString());
+            }
+            
+            else if (token == "cos")
+            {
+                double num = double.Parse(s.Pop());
+                var result = Math.Cos(num); 
+                s.Push(result.ToString());
             }
         }
 
         return double.Parse(s.Pop());
     }
 
-    public double Compute(string input) => Calculate(TurnToRPN(Tokenize(input)));
+    public void Compute()
+    {
+        while (true)
+        {
+            Console.WriteLine("to exit type \"exit\" ");
+            Console.Write(">>> ");
+            string input = Console.ReadLine();
+
+            if (input == "exit")
+                break;
+            
+            CustomArrayList tokens = Tokenize(input);
+            
+            if (tokens.Count() > 0)
+            {
+                CustomArrayList rpn = TurnToRPN(tokens);
+                Console.WriteLine(Calculate(rpn));
+            }
+        }
+    }   
 }

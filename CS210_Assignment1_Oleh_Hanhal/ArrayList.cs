@@ -3,7 +3,6 @@
 public class CustomArrayList
 {
     private string[] _array = new string[10];
-
     private int _pointer = 0;
 
     public void Add(string element)
