@@ -24,6 +24,7 @@ public class Calculator
             case "^":
             case "sin":
             case "cos":
+            case "max":    
                 return 3;
             
             default:
@@ -93,17 +94,24 @@ public class Calculator
                     }
                 }
             
-                else if (s == 's' && (i+1) < input.Length)
+                else if (s == 's' && (i+2) < input.Length)
                 {
                     if (input[i+1] == 'i' && input[i+2] == 'n')
                         tokens.Add("sin");
                     i += 2;
                 }
             
-                else if (s == 'c' && (i+1) < input.Length)
+                else if (s == 'c' && (i+2) < input.Length)
                 {
                     if (input[i+1] == 'o' && input[i+2] == 's')
                         tokens.Add("cos");
+                    i += 2;
+                }
+                
+                else if (s == 'm' && (i+2) < input.Length)
+                {
+                    if (input[i+1] == 'a' && input[i+2] == 'x')
+                        tokens.Add("max");
                     i += 2;
                 }
 
@@ -161,7 +169,8 @@ public class Calculator
                 token == "/" ||
                 token == "^" ||
                 token == "sin" ||
-                token == "cos"
+                token == "cos" ||
+                token == "max"
                 )
             {
                 while (
@@ -273,8 +282,17 @@ public class Calculator
                 var result = Math.Cos(num); 
                 s.Push(result.ToString());
             }
+            
+            else if (token == "max")
+            {
+                double num1 = double.Parse(s.Pop());
+                double num2 = double.Parse(s.Pop());
+                double result = Math.Max(num2, num1);
+                
+                s.Push(result.ToString());
+            }
         }
-
+        
         return double.Parse(s.Pop());
     }
 
