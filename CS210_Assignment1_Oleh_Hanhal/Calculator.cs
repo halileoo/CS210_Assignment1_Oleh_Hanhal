@@ -19,12 +19,12 @@ public class Calculator
             
             case "*":
             case "/":
+            case "@":
                 return 2;
             
             case "^":
             case "sin":
             case "cos":
-            case "max":    
                 return 3;
             
             default:
@@ -48,7 +48,7 @@ public class Calculator
                     buffer += s.ToString();
                 }
             
-                else if (s == '+' || s == '-' || s == '*' || s == '/' || s == '(' || s == ')' || s == '^')
+                else if (s == '+' || s == '-' || s == '*' || s == '/' || s == '(' || s == ')' || s == '^' || s == '@')
                 {
                     if (buffer != "")
                     {
@@ -108,12 +108,12 @@ public class Calculator
                     i += 2;
                 }
                 
-                else if (s == 'm' && (i+2) < input.Length)
-                {
-                    if (input[i+1] == 'a' && input[i+2] == 'x')
-                        tokens.Add("max");
-                    i += 2;
-                }
+                // else if (s == 'm' && (i+2) < input.Length)
+                // {
+                //     if (input[i+1] == 'a' && input[i+2] == 'x')
+                //         tokens.Add("max");
+                //     i += 2;
+                // }
 
                 else
                 {
@@ -170,7 +170,7 @@ public class Calculator
                 token == "^" ||
                 token == "sin" ||
                 token == "cos" ||
-                token == "max"
+                token == "@"
                 )
             {
                 while (
@@ -283,7 +283,7 @@ public class Calculator
                 s.Push(result.ToString());
             }
             
-            else if (token == "max")
+            else if (token == "@")
             {
                 double num1 = double.Parse(s.Pop());
                 double num2 = double.Parse(s.Pop());
